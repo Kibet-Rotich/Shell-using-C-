@@ -14,5 +14,5 @@ int main() {
 
   getline(cin, command);
 
-  cout<< command<< ": Command not found"<< endl;
+  cout<< command<< ": command not found"<< endl;
 }
