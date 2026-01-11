@@ -8,11 +8,14 @@ int main() {
   std::cerr << std::unitbuf;
 
   // TODO: Uncomment the code below to pass the first stage
-  std::cout << "$ ";
+  while(true){
+    std::cout << "$ ";
 
-  string command;
+    string command;
 
-  getline(cin, command);
+    getline(cin, command);
 
-  cout<< command<< ": command not found"<< endl;
+    cout<< command<< ": command not found"<< endl;
+  }
+
 }
