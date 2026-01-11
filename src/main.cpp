@@ -67,8 +67,9 @@ int main(int argc, char *argv[]) {
           if(fs::exists(fullpath)&&fs::is_regular_file(fullpath)){
             if(isexecutable(fullpath)){
               cout<<inputcommand<< " is "<<fullpath<<endl;
+              found = true;
             }
-            found = true;
+            
             break;
             
           }
