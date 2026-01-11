@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
       if(!found){
         vector<string> dirs = getpathdirs();
         for(const string& dir: dirs){
-          string fullpath = dir + "/" + inputcommand;
+          fs::path fullpath = fs::path(dir) / inputcommand;
 
           if(fs::exists(fullpath)&&fs::is_regular_file(fullpath)){
             if(isexecutable(fullpath)){
