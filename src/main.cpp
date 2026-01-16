@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
       int i =0;
       //check built-in commands
       if(validCommands.contains(inputcommand)){
-        cout<<inputcommand<<" is a shell built-in"<<endl;
+        cout<<inputcommand<<" is a shell builtin"<<endl;
         found = true;
       }
 
