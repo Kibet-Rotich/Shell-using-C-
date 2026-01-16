@@ -82,15 +82,17 @@ int main(int argc, char *argv[]) {
 
 
       //search for user command in PATH directories
-      string pathResult = find_in_path(inputcommand);
-      if(!pathResult.empty()){
-        cout<<inputcommand<<" is "<<pathResult<<endl;
-        found = true;
-        
-      }
       if(!found){
-        cout<<inputcommand<<": not found"<<endl;
+        string pathResult = find_in_path(inputcommand);
+        if(!pathResult.empty()){
+          cout<<inputcommand<<" is "<<pathResult<<endl;
+          found = true;
+          
+        }
       }
+        if(!found){
+          cout<<inputcommand<<": not found"<<endl;
+        }
     }
     //check if the user wants to use the echo command
     else if(command.substr(0,5) == "echo "){
