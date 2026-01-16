@@ -7,9 +7,23 @@
 #include<filesystem>
 #include<unordered_set>
 #include <bits/basic_string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 using namespace std;
 namespace fs = std::filesystem;
+
+
+vector<string> tokenize(const string& str) {
+    vector<string> tokens;
+    string token;
+    stringstream ss(str);
+    while (ss >> token) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
 
 //function to check if a file is executable
 bool isexecutable(const string& path){
@@ -60,18 +74,27 @@ int main(int argc, char *argv[]) {
   while(true){
     std::cout << "$ ";
 
-    string command;
 
-    getline(cin, command);
-//check if the user wants to exit
+
+
+    string userinput;
+
+    getline(cin, userinput);
+
+    vector<string> tokens = tokenize(userinput);
+    string command = tokens.empty() ? "" : tokens[0];
+    bool found = false;
+
+
+    //check if the user wants to exit
     if(command == "exit"){
       exit(0);
     }
-//check if the user wants to use the type command   
-    if(command.substr(0,5)=="type "){
+    //check if the user wants to use the type command   
+    if(command=="type"){
       unordered_set<string> validCommands ={"exit","echo","type"};
-      string inputcommand = command.substr(5);
-      bool found = false;
+      string inputcommand = tokens.size() > 1 ? tokens[1] : "";
+      
       
       int i =0;
       //check built-in commands
@@ -95,14 +118,51 @@ int main(int argc, char *argv[]) {
         }
     }
     //check if the user wants to use the echo command
-    else if(command.substr(0,5) == "echo "){
-      string output  = command.substr(5);
+    else if(command == "echo"){
+      string output;
+      for(size_t i =1; i<tokens.size(); ++i){
+        output += tokens[i];
+        if(i != tokens.size() -1){
+          output += " ";
+        }
+      }
       cout<<output<<endl;
+      found = true;
       
          
     }
+    else if(!command.empty()){
+      string pathResult = find_in_path(command);
+      found = !pathResult.empty();
+      //command found in PATH directories
+      if(!pathResult.empty()){
+        //execute the command
+        vector<char*> args;
+        for(const string& token : tokens){
+          args.push_back(const_cast<char*>(token.c_str()));
+        }
+        args.push_back(nullptr);
+
+        pid_t pid = fork();
+        if(pid == 0){
+          //child process
+          execv(pathResult.c_str(), args.data());
+          //if execv returns, there was an error
+          cerr<< "Error executing command"<< endl;
+          exit(1);
+        }
+        else if(pid > 0){
+          //parent process
+          int status;
+          waitpid(pid, &status, 0);
+        }
+        else{
+          cerr<< "Fork failed"<< endl;
+        }
+      }
+    }
     //command not found case
-    else{
+    if(!found && !command.empty()){
       cout<< command<< ": command not found"<< endl;
     }
 
