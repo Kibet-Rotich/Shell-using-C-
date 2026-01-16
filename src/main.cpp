@@ -160,14 +160,10 @@ int main(int argc, char *argv[]) {
         else{
           cerr<< "Fork failed"<< endl;
         }
+      }else{
+        cerr<< command <<": command not found"<< endl;
       }
     }
-    //command not found case
-    if(!found && !command.empty()){
-      cout<< command<< ": command not found"<< endl;
-    }
-
-    
   }
-
+  return 0;
 }
