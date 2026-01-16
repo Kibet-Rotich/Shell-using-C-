@@ -115,6 +115,7 @@ int main(int argc, char *argv[]) {
       }
         if(!found){
           cout<<inputcommand<<": not found"<<endl;
+          found = true;
         }
     }
     //check if the user wants to use the echo command
