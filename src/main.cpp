@@ -101,21 +101,10 @@ void handle_echo(const vector<string>& tokens) {
 }
 
 void handle_pwd(const vector<string>& tokens){
-  if (tokens.size() == 1 && tokens[0] == "pwd") {
-        string pathresult = find_in_path("pwd");
-        pid_t pid = fork();
-        vector<char*> args;
-        args.push_back(nullptr);
-        if(pid == 0){
-          execv(pathresult.c_str(),args.data());
-          exit(1);
-        } else if (pid > 0) {
-            int status;
-            waitpid(pid, &status, 0);
-        } else {
-            cerr << "Fork failed" << endl;
-        }
-    }
+  char path[128];
+  if (getcwd(path, sizeof(path)) != NULL) {
+      printf("%s\n", path);
+  }   
 }
 
 void handle_external_command(const vector<string>& tokens) {
