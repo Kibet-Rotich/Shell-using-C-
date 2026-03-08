@@ -15,13 +15,54 @@ using namespace std;
 namespace fs = std::filesystem;
 
 
+// vector<string> tokenize(const string& str) {
+//     vector<string> tokens;
+//     string token;
+//     stringstream ss(str);
+//     while (ss >> token) {
+//         tokens.push_back(token);
+//     }
+//     return tokens;
+// }
+
 vector<string> tokenize(const string& str) {
     vector<string> tokens;
-    string token;
-    stringstream ss(str);
-    while (ss >> token) {
-        tokens.push_back(token);
+    string buffer;
+    bool inQuotes = false;
+
+    for (int i = 0; i < str.length(); i++) {
+        char c = str[i];
+
+        if (inQuotes) {
+            if (c == '\'') {
+                // Exit quote mode, but DON'T push to tokens yet
+                inQuotes = false;
+            } else {
+                // Inside single quotes, everything is literal
+                buffer.push_back(c);
+            }
+        } else {
+            if (c == '\'') {
+                // Enter quote mode
+                inQuotes = true;
+            } else if (c == ' ') {
+                // Space outside quotes ends the current token
+                if (!buffer.empty()) {
+                    tokens.push_back(buffer);
+                    buffer.clear();
+                }
+            } else {
+                // Regular character outside quotes
+                buffer.push_back(c);
+            }
+        }
     }
+
+    // Push the final remaining argument if the buffer isn't empty
+    if (!buffer.empty()) {
+        tokens.push_back(buffer);
+    }
+
     return tokens;
 }
 
