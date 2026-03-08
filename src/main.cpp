@@ -111,7 +111,7 @@ void handle_cd(const vector<string>& tokens){
     string path = tokens[1];
 
     if(chdir(path.c_str())!=0){
-      std::cout<<"cd: "<<path<<": No such file or directory\n"<<endl;
+      std::cout<<"cd: "<<path<<": No such file or directory"<<endl;
     }
   }
   
