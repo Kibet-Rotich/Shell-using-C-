@@ -72,7 +72,7 @@ void handle_exit(const vector<string>& tokens) {
 }
 
 void handle_type(const vector<string>& tokens) {
-    unordered_set<string> validCommands = {"exit", "echo", "type", "pwd"};
+    unordered_set<string> validCommands = {"exit", "echo", "type", "pwd" , "cd"};
     string inputcommand = tokens.size() > 1 ? tokens[1] : "";
 
     if (validCommands.contains(inputcommand)) {
@@ -103,8 +103,19 @@ void handle_echo(const vector<string>& tokens) {
 void handle_pwd(const vector<string>& tokens){
   char path[128];
   if (getcwd(path, sizeof(path)) != NULL) {
-      printf("%s\n", path);
+      cout<<path<<endl;
   }   
+}
+void handle_cd(const vector<string>& tokens){
+  if(tokens.size()>1){
+    string path = tokens[1];
+
+    if(chdir(path.c_str())!=0){
+      std::cout<<"cd: "<<path<<": No such file or directory\n"<<endl;
+    }
+  }
+  
+    
 }
 
 void handle_external_command(const vector<string>& tokens) {
@@ -154,7 +165,9 @@ int main(int argc, char *argv[]) {
             handle_echo(tokens);
         }else if(command == "pwd") {
             handle_pwd(tokens);
-        } else if (!command.empty()) {
+        } else if(command == "cd") {
+            handle_cd(tokens);
+        }else if (!command.empty()) {
             handle_external_command(tokens);
         }
     }
