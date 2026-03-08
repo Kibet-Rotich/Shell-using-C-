@@ -15,54 +15,44 @@ using namespace std;
 namespace fs = std::filesystem;
 
 
-// vector<string> tokenize(const string& str) {
-//     vector<string> tokens;
-//     string token;
-//     stringstream ss(str);
-//     while (ss >> token) {
-//         tokens.push_back(token);
-//     }
-//     return tokens;
-// }
-
 vector<string> tokenize(const string& str) {
     vector<string> tokens;
     string buffer;
-    bool inQuotes = false;
+    char currentQuote = '\0'; // '\0' means not in quotes, otherwise stores ' or "
 
     for (int i = 0; i < str.length(); i++) {
         char c = str[i];
 
-        if (inQuotes) {
-            if (c == '\'') {
-                // Exit quote mode, but DON'T push to tokens yet
-                inQuotes = false;
+        if (currentQuote != '\0') {
+            // We are INSIDE a quoted block
+            if (c == currentQuote) {
+                // Exit current quote mode
+                currentQuote = '\0';
             } else {
-                // Inside single quotes, everything is literal
+                // Inside quotes: everything is literal (for now)
                 buffer.push_back(c);
             }
         } else {
-            if (c == '\'') {
-                // Enter quote mode
-                inQuotes = true;
+            // We are OUTSIDE quotes
+            if (c == '\'' || c == '\"') {
+                // Enter specific quote mode
+                currentQuote = c;
             } else if (c == ' ') {
-                // Space outside quotes ends the current token
+                // Space outside quotes ends the token
                 if (!buffer.empty()) {
                     tokens.push_back(buffer);
                     buffer.clear();
                 }
             } else {
-                // Regular character outside quotes
+                // Normal character
                 buffer.push_back(c);
             }
         }
     }
 
-    // Push the final remaining argument if the buffer isn't empty
     if (!buffer.empty()) {
         tokens.push_back(buffer);
     }
-
     return tokens;
 }
 
