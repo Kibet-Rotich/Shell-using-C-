@@ -110,9 +110,14 @@ void handle_cd(const vector<string>& tokens){
   if(tokens.size()>1){
     string path = tokens[1];
 
+    if(path == "~"){
+      path = getenv("HOME");
+    }
+
     if(chdir(path.c_str())!=0){
       std::cout<<"cd: "<<path<<": No such file or directory"<<endl;
     }
+
   }
   
     
