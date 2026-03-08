@@ -64,106 +64,110 @@ string find_in_path(const string& command)
 
 
 
-int main(int argc, char *argv[]) {
-  
-  // Flush after every std::cout / std:cerr
-  std::cout << std::unitbuf;
-  std::cerr << std::unitbuf;
 
-
-  while(true){
-    std::cout << "$ ";
-
-
-
-
-    string userinput;
-
-    getline(cin, userinput);
-
-    vector<string> tokens = tokenize(userinput);
-    string command = tokens.empty() ? "" : tokens[0];
-    bool found = false;
-
-
-    //check if the user wants to exit
-    if(command == "exit"){
-      exit(0);
+void handle_exit(const vector<string>& tokens) {
+    if (tokens.size() > 0 && tokens[0] == "exit") {
+        exit(0);
     }
-    //check if the user wants to use the type command   
-    if(command=="type"){
-      unordered_set<string> validCommands ={"exit","echo","type"};
-      string inputcommand = tokens.size() > 1 ? tokens[1] : "";
-      
-      
-      int i =0;
-      //check built-in commands
-      if(validCommands.contains(inputcommand)){
-        cout<<inputcommand<<" is a shell builtin"<<endl;
-        found = true;
-      }
+}
 
+void handle_type(const vector<string>& tokens) {
+    unordered_set<string> validCommands = {"exit", "echo", "type", "pwd"};
+    string inputcommand = tokens.size() > 1 ? tokens[1] : "";
 
-      //search for user command in PATH directories
-      if(!found){
-        string pathResult = find_in_path(inputcommand);
-        if(!pathResult.empty()){
-          cout<<inputcommand<<" is "<<pathResult<<endl;
-          found = true;
-          
-        }
-      }
-        if(!found){
-          cout<<inputcommand<<": not found"<<endl;
-          found = true;
-        }
+    if (validCommands.contains(inputcommand)) {
+        cout << inputcommand << " is a shell builtin" << endl;
+        return;
     }
-    //check if the user wants to use the echo command
-    else if(command == "echo"){
-      string output;
-      for(size_t i =1; i<tokens.size(); ++i){
+
+    string pathResult = find_in_path(inputcommand);
+    if (!pathResult.empty()) {
+        cout << inputcommand << " is " << pathResult << endl;
+        return;
+    }
+
+    cout << inputcommand << ": not found" << endl;
+}
+
+void handle_echo(const vector<string>& tokens) {
+    string output;
+    for (size_t i = 1; i < tokens.size(); ++i) {
         output += tokens[i];
-        if(i != tokens.size() -1){
-          output += " ";
+        if (i != tokens.size() - 1) {
+            output += " ";
         }
-      }
-      cout<<output<<endl;
-      found = true;
-      
-         
     }
-    else if(!command.empty()){
-      string pathResult = find_in_path(command);
-      found = !pathResult.empty();
-      //command found in PATH directories
-      if(!pathResult.empty()){
-        //execute the command
+    cout << output << endl;
+}
+
+void handle_pwd(const vector<string>& tokens){
+  if (tokens.size() == 1 && tokens[0] == "pwd") {
+        string pathresult = find_in_path("pwd");
+        pid_t pid = fork();
         vector<char*> args;
-        for(const string& token : tokens){
-          args.push_back(const_cast<char*>(token.c_str()));
+        args.push_back(nullptr);
+        if(pid == 0){
+          execv(pathresult.c_str(),args.data());
+          exit(1);
+        } else if (pid > 0) {
+            int status;
+            waitpid(pid, &status, 0);
+        } else {
+            cerr << "Fork failed" << endl;
+        }
+    }
+}
+
+void handle_external_command(const vector<string>& tokens) {
+    string command = tokens.empty() ? "" : tokens[0];
+    if (command.empty()) return;
+
+    string pathResult = find_in_path(command);
+    if (!pathResult.empty()) {
+        vector<char*> args;
+        for (const string& token : tokens) {
+            args.push_back(const_cast<char*>(token.c_str()));
         }
         args.push_back(nullptr);
 
         pid_t pid = fork();
-        if(pid == 0){
-          //child process
-          execv(pathResult.c_str(), args.data());
-          //if execv returns, there was an error
-          cerr<< "Error executing command"<< endl;
-          exit(1);
+        if (pid == 0) {
+            execv(pathResult.c_str(), args.data());
+            cerr << "Error executing command" << endl;
+            exit(1);
+        } else if (pid > 0) {
+            int status;
+            waitpid(pid, &status, 0);
+        } else {
+            cerr << "Fork failed" << endl;
         }
-        else if(pid > 0){
-          //parent process
-          int status;
-          waitpid(pid, &status, 0);
-        }
-        else{
-          cerr<< "Fork failed"<< endl;
-        }
-      }else{
-        cerr<< command <<": command not found"<< endl;
-      }
+    } else {
+        cerr << command << ": command not found" << endl;
     }
-  }
-  return 0;
+}
+
+int main(int argc, char *argv[]) {
+    std::cout << std::unitbuf;
+    std::cerr << std::unitbuf;
+
+    while (true) {
+        std::cout << "$ ";
+        string userinput;
+        getline(cin, userinput);
+        vector<string> tokens = tokenize(userinput);
+        string command = tokens.empty() ? "" : tokens[0];
+
+        if (command == "exit") {
+            handle_exit(tokens);
+        } else if (command == "type") {
+            handle_type(tokens);
+        } else if (command == "echo") {
+            handle_echo(tokens);
+        }else if(command == "pwd") {
+            handle_pwd(tokens);
+        } else if (!command.empty()) {
+            handle_external_command(tokens);
+        }
+    }
+    return 0;
 }
