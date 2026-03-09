@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -191,6 +192,20 @@ void handle_external_command(const vector<string>& tokens) {
     }
 }
 
+string get_redirect_file(vector<string>& tokens) {
+    for (size_t i = 0; i < tokens.size(); i++) {
+        if (tokens[i] == ">" || tokens[i] == "1>") {
+            if (i + 1 < tokens.size()) {
+                string filename = tokens[i + 1];
+                // Erase everything from '>' onwards
+                tokens.erase(tokens.begin() + i, tokens.end());
+                return filename;
+            }
+        }
+    }
+    return "";
+}
+
 int main(int argc, char *argv[]) {
     std::cout << std::unitbuf;
     std::cerr << std::unitbuf;
@@ -201,6 +216,22 @@ int main(int argc, char *argv[]) {
         getline(cin, userinput);
         vector<string> tokens = tokenize(userinput);
         string command = tokens.empty() ? "" : tokens[0];
+
+        string pipefilename = get_redirect_file(tokens);
+        int original_stdout = -1;
+
+        if (!pipefilename.empty()) {
+            // 1. Save original stdout
+            original_stdout = dup(STDOUT_FILENO);
+            
+            // 2. Open target file (Write only, Create if missing, Truncate if exists)
+            int fd = open(pipefilename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (fd != -1) {
+                // 3. Point stdout (1) to output file file
+                dup2(fd, STDOUT_FILENO);
+                close(fd);
+            }
+        }
 
         if (command == "exit") {
             handle_exit(tokens);
@@ -214,6 +245,12 @@ int main(int argc, char *argv[]) {
             handle_cd(tokens);
         }else if (!command.empty()) {
             handle_external_command(tokens);
+        }
+
+        //Restore stdout after the command finishes
+        if (original_stdout != -1) {
+            dup2(original_stdout, STDOUT_FILENO);
+            close(original_stdout);
         }
     }
     return 0;
