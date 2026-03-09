@@ -27,7 +27,16 @@ vector<string> tokenize(const string& str) {
             // INSIDE QUOTES
             if (c == currentQuote) {
                 currentQuote = '\0';
+            }else if(c =='\\' && currentQuote == '\"'){
+                if(str[i+1] == '\"' || str[i+1] == '\\'){
+                i++;
+                buffer.push_back(str[i]);
+                } else{
+                    buffer.push_back(str[i]);
+                }
+                    
             } else {
+            
                 buffer.push_back(c);
             }
         } else {
