@@ -18,33 +18,34 @@ namespace fs = std::filesystem;
 vector<string> tokenize(const string& str) {
     vector<string> tokens;
     string buffer;
-    char currentQuote = '\0'; // '\0' means not in quotes, otherwise stores ' or "
+    char currentQuote = '\0'; 
 
     for (int i = 0; i < str.length(); i++) {
         char c = str[i];
 
         if (currentQuote != '\0') {
-            // We are INSIDE a quoted block
+            // INSIDE QUOTES
             if (c == currentQuote) {
-                // Exit current quote mode
                 currentQuote = '\0';
             } else {
-                // Inside quotes: everything is literal (for now)
                 buffer.push_back(c);
             }
         } else {
-            // We are OUTSIDE quotes
-            if (c == '\'' || c == '\"') {
-                // Enter specific quote mode
+            // OUTSIDE QUOTES
+            if (c == '\\') {
+                
+                if (i + 1 < str.length()) {
+                    i++; // Move to the escaped character
+                    buffer.push_back(str[i]);
+                }
+            } else if (c == '\'' || c == '\"') {
                 currentQuote = c;
             } else if (c == ' ') {
-                // Space outside quotes ends the token
                 if (!buffer.empty()) {
                     tokens.push_back(buffer);
                     buffer.clear();
                 }
             } else {
-                // Normal character
                 buffer.push_back(c);
             }
         }
@@ -55,7 +56,6 @@ vector<string> tokenize(const string& str) {
     }
     return tokens;
 }
-
 //function to check if a file is executable
 bool isexecutable(const string& path){
   return access(path.c_str(),X_OK)==0;
